@@ -1,0 +1,59 @@
+# --------------------------------------
+# Terraform Settings Block
+# --------------------------------------
+terraform {
+  required_version = ">= 1.0.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">= 2.0" # Recomendado manter um controle de versão
+    }
+  }
+}
+
+# --------------------------------------
+# Azure Provider Configuration
+# --------------------------------------
+provider "azurerm" {
+  features {} # Obrigatório a partir da v2 do provider
+}
+
+# --------------------------------------
+# Resource Group
+# --------------------------------------
+resource "azurerm_resource_group" "rg" {
+  name     = "rg-auladevops-002"
+  location = "westeurope"
+
+  tags = merge(
+    var.tags,
+    {
+      workspace = terraform.workspace
+    }
+  )
+}
+
+# --------------------------------------
+# Storage Account com site estático
+# --------------------------------------
+resource "azurerm_storage_account" "site" {
+  name                     = "stdevopsrg21605" # deve ter entre 3-24 caracteres, minúsculos, sem hífens
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = azurerm_resource_group.rg.location
+  account_kind             = "StorageV2"
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  enable_https_traffic_only = true
+
+  static_website {
+    index_document = "index.html"
+  }
+
+  tags = merge(
+    var.tags,
+    {
+      workspace = terraform.workspace
+    }
+  )
+}
